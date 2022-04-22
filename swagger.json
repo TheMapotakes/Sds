@@ -1,0 +1,205 @@
+ {
+        "swagger": "2.0",
+        "info": {
+            "title": "Personal Cloud Storage APIs",
+            "version": "1"
+        },
+        "host": "api.cloudapi.verizon.com",
+        "schemes": [
+            "https"
+        ],
+        "basePath": "/cloud/1/oauth2",
+        "paths": {
+            "/token": {
+                "post": {
+                    "operationId": "post_token",
+                    "produces": [
+                        "application/json"
+                    ],
+                    "consumes": [
+                        "application/x-www-form-urlencoded"
+                    ],
+                    "summary": "Obtain an OAuth2 access token.",
+                    "description": "Obtain OAuth 2 access and refresh tokens, using an authorization code received from a call to /authorize or /authorizesilent.",
+                    "parameters": [
+                        {
+                            "$ref": "#/parameters/authorization"
+                        },
+                        {
+                            "name": "grant_type",
+                            "in": "formData",
+                            "description": "OAuth 2 grant type.  Valid values are 'authorization_code' when sending an authorization code, and 'refresh_token' when sending a refresh token.",
+                            "required": true,
+                            "type": "string",
+                            "enum": [
+                                "authorization_code",
+                                "refresh_token"
+                            ]
+                        },
+                        {
+                            "name": "code",
+                            "in": "formData",
+                            "description": "OAuth 2 authorization code.  Required, when grant_type is 'authorization_code'.",
+                            "type": "string"
+                        },
+                        {
+                            "name": "refresh_token",
+                            "in": "formData",
+                            "description": "OAuth 2 refresh token.  Required, when grant_type is 'refresh_token'.",
+                            "type": "string"
+                        },
+                        {
+                            "name": "client_id",
+                            "in": "formData",
+                            "description": "A third-party application's client id. EITHER client_id and client_secret, OR an Authorization header, is required.",
+                            "type": "string"
+                        },
+                        {
+                            "name": "client_secret",
+                            "in": "formData",
+                            "description": "A third-party application's client secret. EITHER client_id and client_secret, OR an Authorization header, is required.",
+                            "type": "string"
+                        },
+                        {
+                            "name": "redirect_uri",
+                            "in": "formData",
+                            "description": "Required if grant_type=authorization_code.  Must match the callback URI used in the /authorize step.",
+                            "type": "string"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "A response containing an access token, a refresh token, and additional information.",
+                            "schema": {
+                                "$ref": "#/definitions/token_response"
+                            }
+                        },
+                        "400": {
+                            "description": "[Bad Request] A required parameter is missing or invalid.",
+                            "schema": {
+                                "$ref": "#/definitions/Error"
+                            }
+                        },
+                        "401": {
+                            "description": "[Unauthorized] client_id is not valid.",
+                            "schema": {
+                                "$ref": "#/definitions/Error"
+                            }
+                        },
+                        "411": {
+                            "description": "[Length Required] An entity was included in the request but a Content-Length header was not.",
+                            "schema": {
+                                "$ref": "#/definitions/Error"
+                            }
+                        },
+                        "503": {
+                            "description": "[Service Unavailable] See response body for more detail.",
+                            "schema": {
+                                "$ref": "#/definitions/Error"
+                            }
+                        }
+                    },
+                    "tags": [
+                        "Try it Out"
+                    ],
+                    "x-auth-type": "None",
+                    "x-throttling-tier": "Unlimited"
+                }
+            }
+        },
+        "parameters": {
+            "client_id_req": {
+                "name": "client_id",
+                "in": "query",
+                "description": "OAuth 2 client identifier (key)",
+                "required": true,
+                "type": "string"
+            },
+            "response_type": {
+                "name": "response_type",
+                "in": "query",
+                "description": "OAuth 2 response type.  Must be 'code'.",
+                "required": true,
+                "type": "string",
+                "enum": [
+                    "code"
+                ]
+            },
+            "redirect_uri_req": {
+                "name": "redirect_uri",
+                "in": "query",
+                "description": "Callback URI invoked after successful or unsuccessful user authorization. A 'code' query string is appended if successful and an 'error' query string if not.",
+                "required": true,
+                "type": "string"
+            },
+            "state": {
+                "name": "state",
+                "in": "query",
+                "description": "This parameter is preserved in the authorization flow and returned to the client as a query string parameter in the 'redirect_uri'. The client may validate this in order to protect against a Cross Site Request Forgery (XSRF) attempt",
+                "required": false,
+                "type": "string"
+            },
+            "spc_token": {
+                "name": "spc_token",
+                "in": "query",
+                "description": "SPC",
+                "required": true,
+                "type": "string"
+            },
+            "mdn": {
+                "name": "mdn",
+                "in": "query",
+                "description": "MDN",
+                "required": true,
+                "type": "string"
+            },
+            "authorization": {
+                "name": "Authorization",
+                "in": "header",
+                "description": "An HTTP Basic Access Authentication header, containing a value like: 'Basic TOKEN', where TOKEN is a base 64-encoded string of the pattern: 'client_id:client_secret'.  The values for client_id and client_secret are specific to a third-party application. An Authorization header is required, UNLESS client_id and client_secret are included in the request body.",
+                "required": false,
+                "type": "string"
+            },
+            "deviceid": {
+                "name": "deviceid",
+                "in": "query",
+                "description": "An identifier for the device being authorized",
+                "required": false,
+                "type": "string"
+            }
+        },
+        "definitions": {
+            "token_response": {
+                "properties": {
+                    "token_type": {
+                        "type": "string",
+                        "description": "OAuth 2 token type.  Should be 'Bearer'."
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "description": "Time-to-live for the access token, in seconds."
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "description": "OAuth 2 refresh token. Can be used in a subsequent call to /token (with grant_type=refresh_token), to obtain a fresh access token."
+                    },
+                    "access_token": {
+                        "type": "string",
+                        "description": "OAuth 2 access token."
+                    }
+                }
+            },
+            "Error": {
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description": "An error"
+                    },
+                    "error_description": {
+                        "type": "string",
+                        "description": "Readable description of error"
+                    }
+                }
+            }
+        }
+    }
